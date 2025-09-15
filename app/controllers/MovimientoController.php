@@ -1,85 +1,106 @@
 <?php
-require_once __DIR__ . "/../models/Movimiento.php";
+require_once 'app/models/Movimiento.php';
 
-class MovimientoController
-{
-	private $db;
+class MovimientoController {
+	private $movimientoModel;
 
-	public function __construct($db)
-	{
-		$this->db = $db;
+	public function __construct($db) {
+		$this->movimientoModel = new Movimiento($db);
 	}
 
-	public function index()
-	{
-		$movimiento = new Movimiento($this->db);
-		$stmt = $movimiento->getAll();
-		$resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	// Listado de movimientos
+	public function index() {
+		// Dentro de index()
+		$movimientosTodos = $this->movimientoModel->obtenerTodos();
 
-		// Calcular balance
-		$ingresos = 0;
-		$gastos = 0;
-		foreach ($resultados as $row) {
-			if ($row['tipo'] === 'ingreso') {
-				$ingresos += $row['cantidad'];
+		// Preparamos datos para el gráfico de evolución de movimientos
+		$datosMovimientos = [];
+		$acumulado = 0;
+
+		foreach ($movimientosTodos as $m) {
+			// Suma ingresos y resta gastos
+			if ($m->tipo === 'ingreso') {
+				$acumulado += (float)$m->cantidad;
 			} else {
-				$gastos += $row['cantidad'];
+				$acumulado -= (float)$m->cantidad;
 			}
+
+			$datosMovimientos[] = [
+				'x' => date("Y-m-d", strtotime($m->fecha)),
+				'y' => (float)$m->cantidad,
+				'tipo' => $m->tipo,
+				'balance' => $acumulado
+			];
+		}
+
+
+		$movimientos = $this->movimientoModel->obtenerTodos();
+		$ingresos = 0; $gastos = 0;
+		foreach ($movimientos as $row) {
+			if ($row->tipo === 'ingreso') $ingresos += (float)$row->cantidad;
+			else                           $gastos   += (float)$row->cantidad;
 		}
 		$balance = $ingresos - $gastos;
 
-		include __DIR__ . "/../views/movimientos/index.php";
+		$sumaMovimientos= $this->movimientoModel->obtenerSumaIngresosGastos();
+		$labels = array_column($sumaMovimientos, 'mes');
+		$datosIngresos = array_map('floatval', array_column($sumaMovimientos, 'ingresos'));
+		$datosGastos   = array_map('floatval', array_column($sumaMovimientos, 'gastos'));
+
+		$ingresosDiarios = $this->movimientoModel->obtenerIngresos();
+		$ingresosAlDia = array_map(function($item) {
+			return ['x' => date("Y-m-d", strtotime($item->fecha)), 'y' => (float)$item->cantidad];
+		}, $ingresosDiarios);
+		$gastosDiarios   = $this->movimientoModel->obtenerGastos();
+		$gastosAlDia = array_map(function($item) {
+			return ['x' => date("Y-m-d", strtotime($item->fecha)), 'y' => (float)$item->cantidad];
+		}, $gastosDiarios);
+
+		$totalesUltimoMes = $this->movimientoModel->obtenerTotalesUltimoMes();
+		$ingresosMes = $totalesUltimoMes->ingresos ?? 0;
+		$gastosMes   = $totalesUltimoMes->gastos ?? 0;
+
+
+		
+		// Datos anuales
+		$datosAnuales = $this->movimientoModel->obtenerDatosAnuales();
+		$labelsAnual = array_column($datosAnuales, 'mes_nombre');
+		$datosIngresosAnual = array_map('floatval', array_column($datosAnuales, 'ingresos'));
+		$datosGastosAnual   = array_map('floatval', array_column($datosAnuales, 'gastos'));
+
+		include 'app/views/movimientos/index.php';
 	}
 
+	// Mostrar formulario de creación
+	public function crear() {
+		include 'app/views/movimientos/crear.php';
+	}
 
-	public function crear()
-	{
-		if ($_POST) {
-			$movimiento = new Movimiento($this->db);
-			$movimiento->tipo = $_POST["tipo"];
-			$movimiento->cantidad = $_POST["cantidad"];
-			$movimiento->categoria = $_POST["categoria"];
-			$movimiento->fecha = $_POST["fecha"];
-			$movimiento->nota = $_POST["nota"];
-			$movimiento->create();
-			header("Location: index.php?controller=movimiento&action=index");
+	// Guardar nuevo movimiento
+	public function guardar($datos) {
+		$this->movimientoModel->insertar($datos);
+		header("Location: index.php?controller=Movimiento&action=index");
+	}
+
+	// Mostrar formulario de edición
+	public function editar($id) {
+		$movimiento = $this->movimientoModel->obtenerPorId($id);
+		if ($movimiento) {
+			include 'app/views/movimientos/editar.php';
 		} else {
-			include __DIR__ . "/../views/movimientos/crear.php";
+			echo "Movimiento no encontrado";
 		}
 	}
 
-	public function editar()
-	{
-		$movimiento = new Movimiento($this->db);
-
-		if ($_POST) {
-			$movimiento->id = $_POST["id"];
-			$movimiento->tipo = $_POST["tipo"];
-			$movimiento->cantidad = $_POST["cantidad"];
-			$movimiento->categoria = $_POST["categoria"];
-			$movimiento->fecha = $_POST["fecha"];
-			$movimiento->nota = $_POST["nota"];
-			$movimiento->update();
-			header("Location: index.php?controller=movimiento&action=index");
-		} else {
-			$id = $_GET["id"] ?? null;
-			if ($id) {
-				$data = $movimiento->getById($id);
-				include __DIR__ . "/../views/movimientos/editar.php";
-			} else {
-				echo "ID no especificado";
-			}
-		}
+	// Actualizar movimiento
+	public function actualizar($datos) {
+		$this->movimientoModel->actualizar($datos);
+		header("Location: index.php?controller=Movimiento&action=index");
 	}
 
-	public function borrar()
-	{
-		$id = $_GET["id"] ?? null;
-		if ($id) {
-			$movimiento = new Movimiento($this->db);
-			$movimiento->id = $id;
-			$movimiento->delete();
-		}
-		header("Location: index.php?controller=movimiento&action=index");
+	// Eliminar movimiento
+	public function eliminar($id) {
+		$this->movimientoModel->eliminar($id);
+		header("Location: index.php?controller=Movimiento&action=index");
 	}
 }

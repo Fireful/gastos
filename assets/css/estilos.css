@@ -1,0 +1,193 @@
+.tablas {
+    cursor: pointer;
+    margin: 3px;
+    width: 100%;
+
+}
+.tablas th{
+    background-color: #cbcbcb;
+}
+/* Redondear bordes de la última fila */
+tr:last-child td:first-child {
+    border-bottom-left-radius: 12px;
+}
+
+tr:last-child td:last-child {
+    border-bottom-right-radius: 12px;
+}
+
+.tablas th, .tablas td {
+    text-align: center;
+    vertical-align: middle;
+    padding: 8px;
+    border: 1px solid grey;
+    
+}
+th:first-child, thead:first-child{
+  border-top-left-radius: 7px;
+}
+
+th:last-child, thead:last-child{
+  border-top-right-radius: 7px;
+}
+
+
+.exito {
+    background-color: #51c96d !important; /* verde */
+    color: white;
+}
+.peligro {
+    background-color: #d15c67 !important; /* rojo/rosa */
+    color: white;
+}
+/* Efecto hover para filas coloreadas */
+.exito:hover {
+    background-color: #16bd3d !important; /* verde más claro */
+    transition: background-color 0.3s;
+
+}
+
+.peligro:hover {
+    background-color: #a30515 !important; /* rojo/rosa más claro */
+    transition: background-color 0.3s;
+    border-radius: 50px;
+}
+
+h1 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#tablaMovimientos tbody tr:last-child {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+
+
+/* === Estilo global de la app de gastos === */
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f7fa;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+/* Contenedor común */
+.container {
+    max-width: 900px;
+    margin: 30px auto;
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Títulos */
+h1, h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #222;
+}
+
+/* Formularios */
+label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 6px;
+    color: #444;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+textarea,
+select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+/* Botones */
+button,
+.btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+button:hover,
+.btn:hover {
+    background: #45a049;
+}
+
+.btnEditar {
+    background: #ff9800;
+}
+.btnEliminar {
+    background: #f44336;
+}
+
+/* Botón cancelar o neutro */
+.btnCancelar {
+    background: #ccc;
+    color: #333;
+}
+.btn-cancel:hover {
+    background: #bbb;
+}
+
+/* Tablas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+table th, table td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+table th {
+    background: #f0f0f0;
+}
+
+tr:hover {
+    background: #f9f9f9;
+}
+
+/* Colores para ingresos/gastos */
+tr.ingreso {
+    background-color: #e0f9e0;
+}
+tr.gasto {
+    background-color: #fbe0e0;
+}
+
+/* Zona de acciones */
+.acciones {
+    text-align: center;
+    margin-top: 20px;
+}
+.acciones a {
+    margin: 0 5px;
+    text-decoration: none;
+    color: #4CAF50;
+    font-weight: bold;
+}

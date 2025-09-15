@@ -1,70 +1,118 @@
 <?php
 class Movimiento {
-    private $conn;
-    private $table = "movimientos";
-
-    public $id;
-    public $tipo;
-    public $cantidad;
-    public $categoria;
-    public $fecha;
-    public $nota;
+    private $db;
 
     public function __construct($db) {
-        $this->conn = $db;
+        $this->db = $db;
     }
 
-    public function getAll() {
-        $query = "SELECT * FROM " . $this->table . " ORDER BY fecha DESC";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt;
+
+
+    // Obtener todos los movimientos
+    public function obtenerTodos() {
+        $stmt = $this->db->query("SELECT * FROM movimientos ORDER BY fecha ASC");
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+
+    }
+    //Obtener suma de ingresos i gastos
+    public function obtenerSumaIngresosGastos() {
+        $stmt = $this->db->query("
+            SELECT 
+              DATE_FORMAT(fecha, '%Y-%m') AS mes,
+              SUM(CASE WHEN tipo='ingreso' THEN cantidad ELSE 0 END) AS ingresos,
+              SUM(CASE WHEN tipo='gasto'   THEN cantidad ELSE 0 END) AS gastos
+            FROM movimientos
+            GROUP BY mes
+            ORDER BY mes");
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
 
-    public function getById($id) {
-        $query = "SELECT * FROM " . $this->table . " WHERE id = :id LIMIT 1";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":id", $id);
-        $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+    public function obtenerIngresos(){
+        $stmt=$this->db->query("
+        SELECT fecha, cantidad 
+        FROM movimientos 
+        WHERE tipo = 'ingreso' 
+        ORDER BY fecha ASC");
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+    public function obtenerGastos(){
+        $stmt=$this->db->query("
+        SELECT fecha, cantidad 
+        FROM movimientos 
+        WHERE tipo = 'gasto' 
+        ORDER BY fecha ASC");
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
 
-    public function create() {
-        $query = "INSERT INTO " . $this->table . " 
-                  (tipo, cantidad, categoria, fecha, nota) 
-                  VALUES (:tipo, :cantidad, :categoria, :fecha, :nota)";
-        $stmt = $this->conn->prepare($query);
-
-        $stmt->bindParam(":tipo", $this->tipo);
-        $stmt->bindParam(":cantidad", $this->cantidad);
-        $stmt->bindParam(":categoria", $this->categoria);
-        $stmt->bindParam(":fecha", $this->fecha);
-        $stmt->bindParam(":nota", $this->nota);
-
-        return $stmt->execute();
+    //Obtener datos del último mes
+    public function obtenerTotalesUltimoMes() {
+        $stmt = $this->db->query("
+            SELECT 
+              SUM(CASE WHEN tipo='ingreso' THEN cantidad ELSE 0 END) AS ingresos,
+              SUM(CASE WHEN tipo='gasto'   THEN cantidad ELSE 0 END) AS gastos
+            FROM movimientos
+            WHERE YEAR(fecha) = YEAR(CURDATE())
+              AND MONTH(fecha) = MONTH(CURDATE())");
+        return $stmt->fetch(PDO::FETCH_OBJ);
     }
 
-    public function update() {
-        $query = "UPDATE " . $this->table . " 
-                  SET tipo = :tipo, cantidad = :cantidad, categoria = :categoria, 
-                      fecha = :fecha, nota = :nota 
-                  WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-
-        $stmt->bindParam(":id", $this->id);
-        $stmt->bindParam(":tipo", $this->tipo);
-        $stmt->bindParam(":cantidad", $this->cantidad);
-        $stmt->bindParam(":categoria", $this->categoria);
-        $stmt->bindParam(":fecha", $this->fecha);
-        $stmt->bindParam(":nota", $this->nota);
-
-        return $stmt->execute();
+    //Datos anuales
+    public function obtenerDatosAnuales() {
+        $this->db->query("SET lc_time_names = 'es_ES'");
+        $stmt = $this->db->query("
+            SELECT 
+              MONTH(fecha) AS mes_num,
+              DATE_FORMAT(fecha, '%M') AS mes_nombre,
+              SUM(CASE WHEN tipo='ingreso' THEN cantidad ELSE 0 END) AS ingresos,
+              SUM(CASE WHEN tipo='gasto'   THEN cantidad ELSE 0 END) AS gastos
+            FROM movimientos
+            WHERE YEAR(fecha) = YEAR(CURDATE())
+            GROUP BY mes_num, mes_nombre
+            ORDER BY mes_num");
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
 
-    public function delete() {
-        $query = "DELETE FROM " . $this->table . " WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(":id", $this->id);
-        return $stmt->execute();
+    
+
+    // Obtener un movimiento por ID
+    public function obtenerPorId($id) {
+        $stmt = $this->db->prepare("SELECT * FROM movimientos WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_OBJ);
+    }
+
+    // Insertar nuevo movimiento
+    public function insertar($datos) {
+        $stmt = $this->db->prepare(
+            "INSERT INTO movimientos (tipo, concepto, cantidad, fecha, categoria) VALUES (?, ?, ?, ?, ?)"
+        );
+        $stmt->execute([
+            $datos['tipo'],
+            $datos['concepto'],
+            $datos['cantidad'],
+            $datos['fecha'],
+            $datos['categoria']
+        ]);
+    }
+
+    // Actualizar un movimiento existente
+    public function actualizar($datos) {
+        $stmt = $this->db->prepare(
+            "UPDATE movimientos SET tipo = ?, concepto = ?, cantidad = ?, fecha = ?, categoria = ? WHERE id = ?"
+        );
+        $stmt->execute([
+            $datos['tipo'],
+            $datos['concepto'],
+            $datos['cantidad'],
+            $datos['fecha'],
+            $datos['categoria'],
+            $datos['id']
+        ]);
+    }
+
+    // Eliminar movimiento
+    public function eliminar($id) {
+        $stmt = $this->db->prepare("DELETE FROM movimientos WHERE id = ?");
+        $stmt->execute([$id]);
     }
 }

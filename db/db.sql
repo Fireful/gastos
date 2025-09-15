@@ -1,3 +1,4 @@
+-- Active: 1753940343458@@127.0.0.1@3306@gastos
 CREATE DATABASE gastos;
 USE gastos;
 

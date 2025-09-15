@@ -2,44 +2,43 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Editar Movimiento</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <title>Editar movimiento</title>
+    <link rel="stylesheet" href="assets/css/estilos.css">
 </head>
-<body class="p-4">
-    <h1>Editar Movimiento</h1>
-    <form method="POST">
-        <input type="hidden" name="id" value="<?= $data['id'] ?>">
+<body>
+    <div class="container">
+        <h1>Editar movimiento</h1>
 
-        <div class="mb-3">
-            <label class="form-label">Tipo</label>
-            <select name="tipo" class="form-select">
-                <option value="ingreso" <?= $data['tipo'] == 'ingreso' ? 'selected' : '' ?>>Ingreso</option>
-                <option value="gasto" <?= $data['tipo'] == 'gasto' ? 'selected' : '' ?>>Gasto</option>
+        <form action="index.php?controller=Movimiento&action=actualizar" method="POST">
+            <input type="hidden" name="id" value="<?= htmlspecialchars($movimiento->id ?? '') ?>">
+
+            <label for="tipo">Tipo:</label>
+            <select id="tipo" name="tipo" required>
+                <option value="ingreso" <?= (isset($movimiento->tipo) && $movimiento->tipo === 'ingreso') ? 'selected' : '' ?>>Ingreso</option>
+                <option value="gasto" <?= (isset($movimiento->tipo) && $movimiento->tipo === 'gasto') ? 'selected' : '' ?>>Gasto</option>
             </select>
-        </div>
 
-        <div class="mb-3">
-            <label class="form-label">Cantidad</label>
-            <input type="number" step="0.01" name="cantidad" value="<?= $data['cantidad'] ?>" class="form-control" required>
-        </div>
+            <label for="concepto">Concepto:</label>
+            <input type="text" id="concepto" name="concepto" 
+                   value="<?= htmlspecialchars($movimiento->concepto ?? '') ?>" required>
 
-        <div class="mb-3">
-            <label class="form-label">Categoría</label>
-            <input type="text" name="categoria" value="<?= $data['categoria'] ?>" class="form-control" required>
-        </div>
+            <label for="cantidad">Cantidad (€):</label>
+            <input type="number" step="0.01" id="cantidad" name="cantidad" 
+                   value="<?= htmlspecialchars($movimiento->cantidad ?? '') ?>" required>
 
-        <div class="mb-3">
-            <label class="form-label">Fecha</label>
-            <input type="date" name="fecha" value="<?= $data['fecha'] ?>" class="form-control" required>
-        </div>
+            <label for="fecha">Fecha:</label>
+            <input type="date" id="fecha" name="fecha" 
+                   value="<?= htmlspecialchars($movimiento->fecha ?? '') ?>" required>
 
-        <div class="mb-3">
-            <label class="form-label">Nota</label>
-            <textarea name="nota" class="form-control"><?= $data['nota'] ?></textarea>
-        </div>
+            <label for="categoria">Categoría:</label>
+            <input type="text" id="categoria" name="categoria" 
+                   value="<?= htmlspecialchars($movimiento->categoria ?? '') ?>" required>
 
-        <button type="submit" class="btn btn-success">Actualizar</button>
-        <a href="index.php?controller=movimiento&action=index" class="btn btn-secondary">Cancelar</a>
-    </form>
+            <div style="text-align:center; margin-top:20px;">
+                <button type="submit">💾 Guardar cambios</button>
+                <a class="cancelar btn btn-sm me-1 btnCancelar" href="index.php?controller=Movimiento&action=index">Cancelar</a>
+            </div>
+        </form>
+    </div>
 </body>
 </html>
